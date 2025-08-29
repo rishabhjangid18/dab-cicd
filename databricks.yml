@@ -33,7 +33,7 @@ targets:
   prod:
     mode: production
     workspace:
-      host: ${DATABRICKS_HOST_PROD}
+      host: https://adb-4214269756063165.5.azuredatabricks.net
       # We explicitly deploy to /Workspace/Users/rishabh.jangid@celebaltech.com to make sure we only have a single copy.
       root_path: /Workspace/Users/rishabh.jangid@celebaltech.com/.bundle/${bundle.name}/${bundle.target}
     permissions:
