@@ -1,4 +1,4 @@
-name: Databricks CI - Dev
+name: deploy-dev
 
 on:
   push:
@@ -6,39 +6,36 @@ on:
       - main
 
 jobs:
-  deploy-dev:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python & Install Databricks CLI v2
-        run: |
-          python -m pip install --upgrade pip
-          pip uninstall -y databricks-cli databricks || true   # remove old CLI
-          pip install databricks-cli==0.266.0                  # install new CLI (v2)
-          databricks -v
-          databricks bundle -h
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-      - name: Validate Databricks Bundle (Dev)
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+      - name: Install latest Databricks CLI
         run: |
-          databricks bundle validate -t dev
+          pip install --upgrade pip
+          pip install databricks-cli  # OLD one, skip this if not needed
+          pip install databricks-sdk==0.19.0
+          pip install databricks-bundles==0.19.0
+          databricks --version
 
-      - name: Deploy Databricks Bundle (Dev)
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+      - name: Configure Databricks Auth
         run: |
-          databricks bundle deploy -t dev
+          echo "[DEFAULT]" > ~/.databrickscfg
+          echo "host = $DATABRICKS_HOST" >> ~/.databrickscfg
+          echo "token = $DATABRICKS_TOKEN" >> ~/.databrickscfg
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
 
-      - name: Run Bundle (optional)
-        if: always()
-        env:
-          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
-          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
-        run: |
-          databricks bundle run -t dev
+      - name: Validate Bundle
+        run: databricks bundle validate -t dev
+
+      - name: Deploy Bundle to Dev
+        run: databricks bundle deploy -t dev
