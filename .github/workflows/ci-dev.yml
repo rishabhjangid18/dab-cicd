@@ -3,7 +3,7 @@ name: deploy-dev
 on:
   push:
     branches:
-      - dev  # run only when code is merged to main
+      - main  # run only when code is merged to main
 
 jobs:
   deploy-dev:
