@@ -3,7 +3,7 @@ name: Databricks CI - Dev
 on:
   push:
     branches:
-      - dev
+      - main
 
 jobs:
   deploy-dev:
