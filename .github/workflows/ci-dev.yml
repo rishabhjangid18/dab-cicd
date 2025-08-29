@@ -17,12 +17,16 @@ jobs:
       # 1. Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      
       # 2. Setup Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
+
+      # 3. Install uv (required by Databricks bundles for python_artifact builds)
+      - name: Install uv
+        run: pip install uv
 
       # 3. Install Databricks CLI + Bundles
       - name: Install Databricks CLI & Bundles
