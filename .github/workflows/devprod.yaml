@@ -1,0 +1,72 @@
+name: Databricks CI/CD
+
+on:
+  push:
+    branches:
+      - main   # Auto trigger Dev on main merge
+  workflow_dispatch:    # Manual trigger for Prod
+
+jobs:
+  deploy-dev:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'   # only run on push
+    env:
+      DATABRICKS_HOST: 'https://adb-2282256369476109.9.azuredatabricks.net'
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+
+    steps:
+      # 1. Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      # 3. Install uv (needed for python_artifact builds)
+      - name: Install uv
+        run: pip install uv
+
+      # 4. Install Databricks CLI + Bundles
+      - name: Install Databricks CLI & Bundles
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh 
+
+      # 5. Validate bundle (Dev)
+      - name: Validate Databricks bundle (Dev)
+        run: databricks bundle validate -t dev
+
+      # 6. Deploy to Databricks (Dev)
+      - name: Deploy bundle to Dev
+        run: databricks bundle deploy -t dev
+
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-dev   # ensure Dev runs before Prod (can remove if fully manual)
+    if: github.event_name == 'workflow_dispatch'   # only manual trigger
+    environment: production   # optional: add approval gate in GitHub Environments
+    env:
+      DATABRICKS_HOST: https://adb-4214269756063165.5.azuredatabricks.net
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Databricks CLI + Bundles
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh 
+
+      - name: Validate bundle (Prod)
+        run: databricks bundle validate -t prod
+
+      - name: Deploy bundle to Prod
+        run: databricks bundle deploy -t prod
