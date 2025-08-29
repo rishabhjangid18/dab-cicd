@@ -3,13 +3,14 @@ name: Databricks CI/CD
 on:
   push:
     branches:
-      - main   # Auto trigger Dev on main merge
-  workflow_dispatch:    # Manual trigger for Prod
+      - main   # Trigger when code is merged to main
 
 jobs:
+  # ----------------------------
+  # Dev Deployment
+  # ----------------------------
   deploy-dev:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'   # only run on push
     env:
       DATABRICKS_HOST: 'https://adb-2282256369476109.9.azuredatabricks.net'
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
@@ -36,13 +37,14 @@ jobs:
       - name: Deploy bundle to Dev
         run: databricks bundle deploy -t dev
 
-
+  # ----------------------------
+  # Prod Deployment (auto after Dev)
+  # ----------------------------
   deploy-prod:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch'   # only manual trigger
-    environment: production
+    needs: deploy-dev   # Wait for Dev to succeed
     env:
-      DATABRICKS_HOST: https://adb-4214269756063165.5.azuredatabricks.net
+      DATABRICKS_HOST: 'https://adb-4214269756063165.5.azuredatabricks.net'
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
 
     steps:
@@ -54,11 +56,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Databricks CLI + Bundles
+      - name: Install Databricks CLI & Bundles
         run: |
           curl -fsSL https://raw.githubusercontent.com/databricks/setup-cli/main/install.sh | sh 
 
-      - name: Validate bundle (Prod)
+      - name: Validate Databricks bundle (Prod)
         run: databricks bundle validate -t prod
 
       - name: Deploy bundle to Prod
