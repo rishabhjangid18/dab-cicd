@@ -41,6 +41,3 @@ jobs:
       - name: Deploy bundle to Dev
         run: databricks bundle deploy -t dev
 
-      # 6. Run bundle (if needed)
-      - name: Run Databricks bundle
-        run: databricks bundle run -t dev
