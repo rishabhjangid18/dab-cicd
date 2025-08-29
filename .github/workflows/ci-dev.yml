@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
+      DATABRICKS_HOST: 'https://adb-2282256369476109.9.azuredatabricks.net/'
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
 
     steps:
