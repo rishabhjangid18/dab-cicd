@@ -22,7 +22,7 @@ targets:
     mode: development
     default: true
     workspace:
-      host: ${DATABRICKS_HOST_DEV}
+      host: 'https://adb-2282256369476109.9.azuredatabricks.net'
     presets:
       # Set dynamic_version: true on all artifacts of type "whl".
       # This makes "bundle deploy" add a timestamp to wheel's version before uploading,
