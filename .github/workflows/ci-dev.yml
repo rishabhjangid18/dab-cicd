@@ -1,34 +1,44 @@
-name: CI - Databricks Dev
+name: Databricks CI - Dev
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - dev
 
 jobs:
   deploy-dev:
     runs-on: ubuntu-latest
-    env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python & Install Databricks CLI v2
         run: |
           python -m pip install --upgrade pip
-          pip install --upgrade databricks-cli  # Installs newest CLI with bundle support
-
-      - name: Verify CLI & Bundle Commands
-        run: |
+          pip uninstall -y databricks-cli databricks || true   # remove old CLI
+          pip install databricks-cli==0.266.0                  # install new CLI (v2)
           databricks -v
-          databricks bundle -h  # Should now work
+          databricks bundle -h
 
       - name: Validate Databricks Bundle (Dev)
-        run: databricks bundle validate -t dev
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+        run: |
+          databricks bundle validate -t dev
 
-      - name: Deploy to Databricks Dev
-        run: databricks bundle deploy -t dev
+      - name: Deploy Databricks Bundle (Dev)
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+        run: |
+          databricks bundle deploy -t dev
+
+      - name: Run Bundle (optional)
+        if: always()
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_DEV_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_DEV_TOKEN }}
+        run: |
+          databricks bundle run -t dev
