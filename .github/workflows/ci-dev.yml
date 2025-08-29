@@ -1,20 +1,17 @@
-name: CI - Deploy to Dev
+name: CD - Deploy to Prod
 
 on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
+  workflow_dispatch:   # Only manual trigger for Prod
 
 jobs:
-  deploy-dev:
+  deploy-prod:
     runs-on: ubuntu-latest
     env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -22,21 +19,18 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Databricks CLI v2 (with bundle support)
+      - name: Install Databricks CLI v2
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pipx
-          python -m pipx ensurepath
-          pipx install databricks
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          pip install databricks==0.205.0   # CLI v2 with bundle support
 
       - name: Verify CLI + Bundles
         run: |
           databricks -v
-          databricks bundle -h   # ✅ bundle is part of CLI v2
+          databricks bundle -h
 
-      - name: Validate Databricks bundle (Dev)
-        run: databricks bundle validate -t dev
+      - name: Validate bundle (Prod)
+        run: databricks bundle validate -t prod
 
-      - name: Deploy Databricks bundle to Dev
-        run: databricks bundle deploy -t dev
+      - name: Deploy bundle to Prod
+        run: databricks bundle deploy -t prod
