@@ -1,14 +1,17 @@
-name: CD - Deploy to Prod
+name: CI - Deploy to Dev
 
 on:
-  workflow_dispatch:   # Only manual trigger for Prod
+  push:
+    branches:
+      - main   # Trigger on push to main
+  workflow_dispatch:
 
 jobs:
-  deploy-prod:
+  deploy-dev:
     runs-on: ubuntu-latest
     env:
-      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_PROD }}
-      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_PROD }}
+      DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST_DEV }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN_DEV }}
 
     steps:
       - name: Checkout code
@@ -29,8 +32,8 @@ jobs:
           databricks -v
           databricks bundle -h
 
-      - name: Validate bundle (Prod)
-        run: databricks bundle validate -t prod
+      - name: Validate bundle (Dev)
+        run: databricks bundle validate -t dev
 
-      - name: Deploy bundle to Prod
-        run: databricks bundle deploy -t prod
+      - name: Deploy bundle to Dev
+        run: databricks bundle deploy -t dev
